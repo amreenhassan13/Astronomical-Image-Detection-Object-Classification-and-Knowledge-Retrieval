@@ -36,7 +36,7 @@ Sky surveys produce far more images than people can inspect by hand. Deep learni
 
 AdAstra closes that gap. It pairs a lightweight CNN classifier with a retrieval-augmented explanation layer, so every prediction comes with **what it means, how sure the system is, and where each fact came from**. It is also built to say *"I'm not sure"* and *"this isn't a space image"* instead of confidently guessing.
 
-> Built as a BRACU CSE 400 undergraduate thesis. Designed to be defensible in a viva: every number in the UI traces back to a config value or a model manifest.
+> Completed as a two-person BRAC University CSE 400 undergraduate thesis. Designed to be defensible in a viva: every number in the UI traces back to a config value or a model manifest.
 
 ## What it does
 
@@ -248,10 +248,16 @@ A project that explains its own failure modes is more useful than one that hides
 
 SpaceNet (Kaggle) and Galaxy Zoo volunteers for the data; Wikipedia contributors (CC BY-SA) for the knowledge base; OpenAI CLIP; the EfficientNet, ONNX Runtime, FAISS, LangChain, and fastembed projects.
 
-## Author
+## Authors
 
-**Amreen Hassan**, BRAC University, Computer Science and Engineering
-[GitHub](https://github.com/amreenhassan13)
+A two-person BRAC University CSE 400 thesis project.
+
+| | Contribution |
+|---|---|
+| **Talal Bin Sajjad Rahi** ([@TalalRahi](https://github.com/TalalRahi)) | Project lead and copyright holder; platform architecture, backend and frontend engineering, deployment |
+| **Amreen Hassan** ([@amreenhassan13](https://github.com/amreenhassan13)) | Training and running the classification models (EfficientNet-B0 on SpaceNet and Galaxy Zoo); RAG implementation — knowledge base, retrieval and grounded explanations; Sky page features; thesis report |
+
+Original repository: [TalalRahi/AdAstra](https://github.com/TalalRahi/AdAstra)
 
 ## License
 
