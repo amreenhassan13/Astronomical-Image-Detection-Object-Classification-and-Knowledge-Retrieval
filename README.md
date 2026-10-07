@@ -1,8 +1,10 @@
 <div align="center">
 
-# ✦ AdAstra
+# ᯓ★ AdAstra ⋆˚꩜｡
 
 ### Know what you're looking at in the sky.
+
+⋆˚꩜｡.✦ ݁˖.
 
 **A web platform for astronomical image detection, object classification, and knowledge retrieval.**
 
@@ -40,14 +42,14 @@ AdAstra closes that gap. It pairs a lightweight CNN classifier with a retrieval-
 
 | | |
 |---|---|
-| 🔭 **Classify** | EfficientNet-B0 sorts an image into **constellation, galaxy, nebula, planet, or star**, with probabilities for all five classes. |
-| 🌀 **Galaxy shape** | If the object is a galaxy, a second EfficientNet-B0 decides **spiral vs. elliptical** (two-stage recognition). |
-| 🛡️ **Refuses non-space images** | A **CLIP gate** asks "does this even look astronomical?" before classifying, because a closed-set classifier will happily call a cat photo a "nebula". |
-| ⚠️ **Flags uncertainty** | If confidence < 0.55 or the top two classes are within 0.15, the result is marked *uncertain*, the runner-up is shown, and the explanation covers both. |
-| 📚 **Explains with sources** | Retrieval over a FAISS index of Wikipedia astronomy articles feeds **Gemma 4** via LangChain. Output is cited `[n]`, in **beginner / intermediate / advanced** levels. |
-| 💬 **Ask anything** | A free-form astronomy assistant answering **only** from the knowledge base, and saying so when the sources don't cover the question. |
-| 🌙 **Moon + Sky** | A browser-side Moon-phase calculator and an interactive celestial-object explorer that hands off to the assistant. |
-| 👤 **Accounts and history** | Firebase Auth (email verification, password reset, account deletion) with analysis history in MongoDB Atlas, plus printable reports. |
+| ⋆˚꩜｡ **Classify** | EfficientNet-B0 sorts an image into **constellation, galaxy, nebula, planet, or star**, with probabilities for all five classes. |
+| ꩜ **Galaxy shape** | If the object is a galaxy, a second EfficientNet-B0 decides **spiral vs. elliptical** (two-stage recognition). |
+| ⋆.˚ ☾⭒.˚ **Refuses non-space images** | A **CLIP gate** asks "does this even look astronomical?" before classifying, because a closed-set classifier will happily call a cat photo a "nebula". |
+| ⋆⭒˚.⋆ **Flags uncertainty** | If confidence < 0.55 or the top two classes are within 0.15, the result is marked *uncertain*, the runner-up is shown, and the explanation covers both. |
+| .✦ ݁˖ **Explains with sources** | Retrieval over a FAISS index of Wikipedia astronomy articles feeds **Gemma 4** via LangChain. Output is cited `[n]`, in **beginner / intermediate / advanced** levels. |
+| ✨ **Ask anything** | A free-form astronomy assistant answering **only** from the knowledge base, and saying so when the sources don't cover the question. |
+| ⋆☀︎. **Moon + Sky** | A browser-side Moon-phase calculator and an interactive celestial-object explorer that hands off to the assistant. |
+| ꒷꒦︶꒷꒦︶ ๋ ࣭ ⭑꒷꒦ **Accounts and history** | Firebase Auth (email verification, password reset, account deletion) with analysis history in MongoDB Atlas, plus printable reports. |
 
 ## Screenshots
 
@@ -86,16 +88,17 @@ Browse comets, constellations, nebulae, and stars. Pick an object to see key fac
 
 ```mermaid
 flowchart LR
-    U[Image upload] --> V[Validate<br/>PNG/JPEG/WebP/TIFF, 4 MB cap]
-    V --> G{CLIP gate<br/>looks astronomical?}
-    G -- no --> X[Refuse, explain why]
-    G -- yes --> C[EfficientNet-B0<br/>5 classes, ONNX]
-    C --> M[Galaxy morphology<br/>spiral / elliptical]
-    C --> Q[Uncertainty check<br/>confidence + margin]
-    Q --> R[FAISS retrieval<br/>MiniLM embeddings]
+    U["Image upload"] --> V["Validate<br/>PNG, JPEG, WebP, TIFF - 4 MB cap"]
+    V --> G{"CLIP gate<br/>looks astronomical?"}
+    G -- no --> X["Refuse and explain why"]
+    G -- yes --> C["EfficientNet-B0<br/>5 classes, ONNX"]
+    C --> M["Galaxy morphology<br/>spiral or elliptical"]
+    C --> Q["Uncertainty check<br/>confidence and margin"]
+    Q --> R["FAISS retrieval<br/>MiniLM embeddings"]
     M --> R
-    R --> L[LangChain LCEL<br/>Gemma 4, cited]
-    L --> J[JSON response] --> UI[React UI]
+    R --> L["LangChain LCEL<br/>Gemma 4, cited"]
+    L --> J["JSON response"]
+    J --> UI["React UI"]
 ```
 
 **Two Vercel projects, one repository.** The React frontend is static; the FastAPI backend runs as a serverless function. The frontend calls the backend directly over CORS.
