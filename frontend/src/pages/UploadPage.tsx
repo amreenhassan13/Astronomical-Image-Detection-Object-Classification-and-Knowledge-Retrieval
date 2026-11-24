@@ -5,7 +5,6 @@ import HealthBanner from '../components/HealthBanner'
 import { classify } from '../lib/api'
 import { prepareUpload } from '../lib/downscale'
 import { LEVELS } from '../lib/format'
-import { addToHistory, makeThumbnail } from '../lib/history'
 import { useStore } from '../lib/store'
 import type { Level } from '../lib/types'
 
@@ -35,7 +34,6 @@ export default function UploadPage() {
       if (prepared.resized) {
         result.warnings.unshift('The image was shrunk in your browser before upload.')
       }
-      await addToHistory(result, file.name, await makeThumbnail(file)) // saved to your account
       setAnalysis(result, preview)
       navigate('/results')
     } catch (e) {

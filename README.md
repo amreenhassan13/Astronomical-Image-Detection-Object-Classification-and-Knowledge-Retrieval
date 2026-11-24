@@ -49,7 +49,7 @@ AdAstra closes that gap. It pairs a lightweight CNN classifier with a retrieval-
 | .✦ ݁˖ **Explains with sources** | Retrieval over a FAISS index of Wikipedia astronomy articles feeds **Gemma 4** via LangChain. Output is cited `[n]`, in **beginner / intermediate / advanced** levels. |
 | ✨ **Ask anything** | A free-form astronomy assistant answering **only** from the knowledge base, and saying so when the sources don't cover the question. |
 | ⋆☀︎. **Moon + Sky** | A browser-side Moon-phase calculator and an interactive celestial-object explorer that hands off to the assistant. |
-| ꒷꒦︶꒷꒦︶ ๋ ࣭ ⭑꒷꒦ **Accounts and history** | Firebase Auth (email verification, password reset, account deletion) with analysis history in MongoDB Atlas, plus printable reports. |
+| ꒷꒦︶꒷꒦︶ ๋ ࣭ ⭑꒷꒦ **Open access** | No account needed: anyone with the link can use every page. Results can be printed as reports. |
 
 ## Screenshots
 
@@ -138,7 +138,6 @@ Per-class recall on SpaceNet: planet 0.92, galaxy 0.87, star 0.82, nebula 0.82, 
 | Vision | EfficientNet-B0 ×2 and CLIP ViT-B/32 (int8), all on ONNX Runtime |
 | Retrieval | fastembed (MiniLM), FAISS `IndexFlatIP`, custom retriever |
 | LLM | Gemma 4 (`gemma-4-26b-a4b-it`) via Google AI Studio, LangChain LCEL |
-| Auth and data | Firebase Auth, MongoDB Atlas |
 | Hosting | Vercel (two projects, one repo) |
 
 ## Project structure
@@ -172,7 +171,6 @@ Per-class recall on SpaceNet: planet 0.92, galaxy 0.87, star 0.82, nebula 0.82, 
 | `POST` | `/api/classify` | Multipart image → CLIP gate, classification, morphology, cited explanation, sources |
 | `POST` | `/api/explain` | Re-explain an earlier result at a different level (stateless) |
 | `POST` | `/api/rag-query` | Free-form question → cited answer |
-| `GET/POST/DELETE` | `/api/me`, `/api/history` | Profile and analysis history (signed-in users) |
 
 OpenAPI docs are served by FastAPI when running locally.
 
@@ -205,8 +203,6 @@ Key backend variables:
 | `GOOGLE_API_KEY` | Gemma explanations and the Ask page (placeholder text without it) |
 | `GEMMA_MODEL` | Defaults to `gemma-4-26b-a4b-it` |
 | `CORS_ORIGINS` | Allowed frontend origin(s) |
-| `FIREBASE_PROJECT_ID` | Enables sign-in (leave empty for open local testing) |
-| `MONGODB_URI`, `MONGODB_DB` | Accounts and history |
 | `MIN_CONFIDENCE`, `MIN_MARGIN` | Uncertainty thresholds (defaults 0.55 / 0.15) |
 
 Never commit `.env` files. To rebuild or extend the knowledge base:

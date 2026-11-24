@@ -7,10 +7,7 @@ import type {
   ExplainResponse,
   GalaxyMorphology,
   HealthResponse,
-  HistoryListResponse,
   Level,
-  Profile,
-  ServerHistoryEntry,
 } from './types'
 
 const BASE = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api').replace(/\/$/, '')
@@ -24,26 +21,14 @@ export class ApiError extends Error {
   }
 }
 
-// When someone is signed in, lib/auth.tsx sets this to a function that returns
-// their Firebase pass (ID token). It is sent with every request.
-type TokenProvider = () => Promise<string | null>
-let getToken: TokenProvider = async () => null
-export function setTokenProvider(provider: TokenProvider) {
-  getToken = provider
-}
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   // Give up after TIMEOUT_MS so the page never waits forever.
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
-  const headers = new Headers(init?.headers)
-  const token = await getToken().catch(() => null)
-  if (token) headers.set('Authorization', `Bearer ${token}`)
-
   let res: Response
   try {
-    res = await fetch(`${BASE}${path}`, { ...init, headers, signal: controller.signal })
+    res = await fetch(`${BASE}${path}`, { ...init, signal: controller.signal })
   } catch (err) {
     if ((err as Error).name === 'AbortError') {
       throw new ApiError('timeout', 'The server took too long to answer. Try again.')
@@ -111,53 +96,4 @@ export function askQuestion(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question, k, history, analysis_context: analysisContext }),
   })
-}
-
-/** The signed-in user's profile (created on the server on first visit). */
-export function getMe(): Promise<Profile> {
-  return request('/me')
-}
-
-/** Save the name and the email-updates choice. */
-export function saveMe(name: string, emailUpdates: boolean): Promise<Profile> {
-  return request('/me', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email_updates: emailUpdates }),
-  })
-}
-
-/** Delete everything AdAstra stores about the signed-in user. */
-export function deleteMe(): Promise<{ deleted: boolean }> {
-  return request('/me', { method: 'DELETE' })
-}
-
-// ---------------------------------------------------------------- history
-// (server-side, per signed-in user — see lib/history.ts, which is what
-// pages actually call; this file just mirrors the backend's shapes and paths.)
-
-/** This user's saved analyses, most recent first, from the database. */
-export function getHistory(): Promise<HistoryListResponse> {
-  return request('/history')
-}
-
-/** Save one completed analysis to the signed-in user's history. */
-export function saveHistoryEntry(
-  result: ClassifyResponse,
-  fileName: string,
-  thumbnail: string | null,
-): Promise<ServerHistoryEntry> {
-  return request('/history', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ result, file_name: fileName, thumbnail }),
-  })
-}
-
-export function deleteHistoryEntryRemote(id: string): Promise<{ deleted: boolean }> {
-  return request(`/history/${id}`, { method: 'DELETE' })
-}
-
-export function clearHistoryRemote(): Promise<{ deleted: boolean }> {
-  return request('/history', { method: 'DELETE' })
 }

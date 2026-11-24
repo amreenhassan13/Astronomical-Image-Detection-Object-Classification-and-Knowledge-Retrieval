@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import ProbabilityList from '../components/ProbabilityList'
 import RichText from '../components/RichText'
 import { explain } from '../lib/api'
 import { LEVELS, pct } from '../lib/format'
-import { findThumbnail } from '../lib/history'
 import { useStore } from '../lib/store'
 import type { ExplainResponse, Level } from '../lib/types'
 
@@ -25,17 +24,6 @@ export default function ResultsPage() {
   const [loadingLevel, setLoadingLevel] = useState<Level | null>(null)
   const [explainError, setExplainError] = useState<string | null>(null)
 
-  // findThumbnail is async now (history can be server-backed), so this can't
-  // be a plain computed value any more — it has to be its own piece of
-  // state, loaded in an effect. Declared here, before any early return,
-  // because hooks must run in the same order on every render.
-  const [savedThumb, setSavedThumb] = useState<string | null>(null)
-  useEffect(() => {
-    if (result && !previewUrl) {
-      findThumbnail(result.request_id).then(setSavedThumb)
-    }
-  }, [result, previewUrl])
-
   if (!result) {
     return (
       <div className="py-16">
@@ -48,7 +36,7 @@ export default function ResultsPage() {
     )
   }
 
-  const image = previewUrl ?? savedThumb // after a reload, use the saved thumbnail
+  const image = previewUrl
 
   // CLIP decided this doesn't look like an astronomical image at all — the
   // classifier never ran, so there is no prediction to show. Show why

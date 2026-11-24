@@ -1,25 +1,14 @@
 // A printable report of one analysis. The browser's print window can save it
 // as a PDF ("Save as PDF" as the destination), so no PDF library is needed.
-import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import RichText from '../components/RichText'
 import { dateTime, LEVELS, pct } from '../lib/format'
-import { findThumbnail } from '../lib/history'
 import { useStore } from '../lib/store'
 import type { ExplainResponse } from '../lib/types'
 
 export default function ReportPage() {
   const { result, previewUrl } = useStore()
   const location = useLocation()
-
-  // findThumbnail is async now (history can be server-backed) — see the same
-  // fix in ResultsPage.tsx. Declared before any early return (rules of hooks).
-  const [savedThumb, setSavedThumb] = useState<string | null>(null)
-  useEffect(() => {
-    if (result && !previewUrl) {
-      findThumbnail(result.request_id).then(setSavedThumb)
-    }
-  }, [result, previewUrl])
 
   if (!result) {
     return (
@@ -50,7 +39,7 @@ export default function ReportPage() {
   const sources = chosen?.sources ?? result.sources
   const c = result.classification
   const m = result.galaxy_morphology
-  const image = previewUrl ?? savedThumb
+  const image = previewUrl
   const levelLabel = LEVELS.find((l) => l.value === explanation.level)?.label
 
   // Only include the galaxy shape when the second stage actually ran.

@@ -115,28 +115,3 @@ export interface ChatResponse {
   warnings: string[]
   latency_ms: number
 }
-
-export interface Profile {
-  uid: string
-  email: string | null
-  email_verified: boolean
-  name: string
-  email_updates: { opted_in: boolean; updated_at: string }
-  created_at: string
-}
-
-// ---------------------------------------------------------------- history
-// The server's shape for one saved analysis (snake_case, straight off the
-// wire). lib/history.ts converts this to its own camelCase HistoryEntry —
-// pages never see ServerHistoryEntry directly.
-export interface ServerHistoryEntry {
-  id: string
-  result: ClassifyResponse
-  file_name: string
-  thumbnail: string | null
-  saved_at: string
-}
-
-export interface HistoryListResponse {
-  entries: ServerHistoryEntry[]
-}

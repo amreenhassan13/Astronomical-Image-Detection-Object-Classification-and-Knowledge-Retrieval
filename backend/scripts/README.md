@@ -20,8 +20,7 @@ image upload
   -> JSON -> React UI
 ```
 
-Also: an "Ask" page (free-form questions answered from the same knowledge base), analysis history
-per signed-in user, printable reports, a browser-side Moon-phase calculator, and a "Sky" page.
+Also: an "Ask" page (free-form questions answered from the same knowledge base), printable reports, a browser-side Moon-phase calculator, and a "Sky" page.
 
 Every model has a clearly labelled demo fallback, so the site never crashes when an artifact is
 missing and never presents a placeholder as a real result. Responses carry `mode: live | demo`
@@ -30,7 +29,7 @@ and `warnings`.
 ## Stack
 
 - **Backend:** FastAPI (plain `def` handlers, so a slow request never blocks others), ONNX Runtime,
-  FAISS, fastembed (MiniLM), LangChain + Gemma via Google AI Studio, MongoDB Atlas, Firebase Auth.
+  FAISS, fastembed (MiniLM), LangChain + Gemma via Google AI Studio.
 - **Frontend:** React 19, Vite, TypeScript, Tailwind v4, React Router.
 - **Hosting:** two Vercel projects (frontend and backend) from one repository.
 
@@ -61,8 +60,6 @@ npm run dev                       # http://localhost:5173
 | `GOOGLE_API_KEY` | Gemma explanations and the Ask page (without it: placeholder text) |
 | `GEMMA_MODEL` | default `gemma-4-26b-a4b-it` |
 | `CORS_ORIGINS` | the frontend's address(es), comma-separated |
-| `FIREBASE_PROJECT_ID` | turns sign-in on (empty = site stays open, for local testing) |
-| `MONGODB_URI`, `MONGODB_DB` | accounts and history |
 | `MIN_CONFIDENCE`, `MIN_MARGIN` | "uncertain" thresholds for the classifier |
 | `CLIP_ASTRO_THRESHOLD` | optional override of the CLIP gate threshold |
 | `WIKIPEDIA_CONTACT` | your email, used only when building the knowledge index |

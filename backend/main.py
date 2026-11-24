@@ -4,13 +4,12 @@ import logging
 import time
 import uuid
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from adastra import __version__, db, pipeline
-from adastra.auth import AuthUser, EmailNotVerified, auth_enabled, current_user, signed_in_if_enabled
+from adastra import __version__, pipeline
 from adastra.classify import get_model
 from adastra.clip import get_model as get_clip_model
 from adastra.config import settings
@@ -25,12 +24,7 @@ from adastra.schemas import (
     ExplainRequest,
     ExplainResponse,
     HealthResponse,
-    HistoryEntry,
-    HistoryEntryCreate,
-    HistoryListResponse,
     Level,
-    Profile,
-    ProfileUpdate,
     SlotStatus,
 )
 
@@ -48,7 +42,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_methods=["GET", "POST", "DELETE"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -60,17 +54,14 @@ def _error(status: int, code: str, message: str, request_id: str) -> JSONRespons
     )
 
 
-HTTP_CODES = {401: "not_signed_in", 403: "forbidden", 404: "not_found", 405: "method_not_allowed", 503: "unavailable"}
+HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 503: "unavailable"}
 
 
 @app.exception_handler(StarletteHTTPException)
 def http_error(request: Request, exc: StarletteHTTPException):
-    """Errors raised on purpose (e.g. "please sign in") use the same JSON shape."""
+    """Errors raised on purpose use the same JSON shape."""
     request_id = uuid.uuid4().hex[:12]
-    if isinstance(exc, EmailNotVerified):
-        code = "email_not_verified"
-    else:
-        code = HTTP_CODES.get(exc.status_code, f"http_{exc.status_code}")
+    code = HTTP_CODES.get(exc.status_code, f"http_{exc.status_code}")
     return _error(exc.status_code, code, str(exc.detail), request_id)
 
 
@@ -117,16 +108,6 @@ def health():
                 detail="Search index found." if store.exists()
                 else "No index yet — run: python -m scripts.ingest --wikipedia --pdfs",
             ),
-            "accounts": SlotStatus(
-                status="live" if auth_enabled() else "missing",
-                detail="Firebase Authentication" if auth_enabled()
-                else "No FIREBASE_PROJECT_ID set — sign-in is switched off.",
-            ),
-            "database": SlotStatus(
-                status="live" if db.ping() else "missing",
-                detail="MongoDB Atlas connected" if db.db_enabled()
-                else "No MONGODB_URI set — accounts can't be saved.",
-            ),
             "llm": SlotStatus(
                 status="live" if key_present() else "missing",
                 detail=f"{settings.gemma_model} (API key set)" if key_present()
@@ -136,12 +117,7 @@ def health():
     )
 
 
-# The three main features need a signed-in user with a verified email
-# (when accounts are switched on).
-signed_in = Depends(signed_in_if_enabled)
-
-
-@app.post("/api/classify", response_model=ClassifyResponse, dependencies=[signed_in])
+@app.post("/api/classify", response_model=ClassifyResponse)
 def classify(file: UploadFile = File(...), level: Level = Form("beginner")):
     request_id = uuid.uuid4().hex[:12]
     # Read one byte past the limit so oversized files are detected without
@@ -167,7 +143,7 @@ def classify(file: UploadFile = File(...), level: Level = Form("beginner")):
     return result
 
 
-@app.post("/api/explain", response_model=ExplainResponse, dependencies=[signed_in])
+@app.post("/api/explain", response_model=ExplainResponse)
 def explain(req: ExplainRequest):
     """Explain an earlier result at another level. The browser sends the
     classification back, so the server needs no memory of past requests."""
@@ -177,7 +153,7 @@ def explain(req: ExplainRequest):
     return ExplainResponse(explanation=explanation, sources=sources, warnings=warnings)
 
 
-@app.post("/api/rag-query", response_model=ChatResponse, dependencies=[signed_in])
+@app.post("/api/rag-query", response_model=ChatResponse)
 def rag_query(req: ChatRequest):
     """The "Ask" page: answer a question from the knowledge base, with sources."""
     start = time.perf_counter()
@@ -186,87 +162,3 @@ def rag_query(req: ChatRequest):
     )
     latency = round((time.perf_counter() - start) * 1000, 1)
     return ChatResponse(answer=answer, sources=sources, warnings=warnings, latency_ms=latency)
-
-
-# ---------------------------------------------------------------- accounts
-def _require_db():
-    if not db.db_enabled():
-        raise HTTPException(503, detail="The database is not set up on this server.")
-
-
-def _profile(doc: dict, user: AuthUser) -> Profile:
-    return Profile(
-        uid=user.uid,
-        email=user.email,
-        email_verified=user.email_verified,
-        name=doc["name"],
-        email_updates=doc["email_updates"],
-        created_at=doc["created_at"],
-    )
-
-
-@app.get("/api/me", response_model=Profile)
-def get_me(user: AuthUser = Depends(current_user)):
-    """The signed-in user's profile (created on first visit if missing)."""
-    _require_db()
-    return _profile(db.touch_user(user.uid, user.email, user.name), user)
-
-
-@app.post("/api/me", response_model=Profile)
-def save_me(update: ProfileUpdate, user: AuthUser = Depends(current_user)):
-    """Save the name and the email-updates choice (called right after sign-up)."""
-    _require_db()
-    return _profile(db.save_user(user.uid, user.email, update.name.strip(), update.email_updates), user)
-
-
-@app.delete("/api/me")
-def delete_me(user: AuthUser = Depends(current_user)):
-    """Delete everything AdAstra stores about this user. (The browser then
-    deletes the Firebase account itself.)"""
-    _require_db()
-    db.delete_user(user.uid)
-    return {"deleted": True}
-
-
-# ---------------------------------------------------------------- history
-def _history_entry(doc: dict) -> HistoryEntry:
-    return HistoryEntry(
-        id=doc["_id"],
-        result=doc["result"],
-        file_name=doc["file_name"],
-        thumbnail=doc.get("thumbnail"),
-        saved_at=doc["saved_at"],
-    )
-
-
-@app.get("/api/history", response_model=HistoryListResponse)
-def get_history(user: AuthUser = Depends(current_user)):
-    """Every analysis this user has saved, most recent first. Read from the
-    database rather than the browser, so it's the same list on any device."""
-    _require_db()
-    return HistoryListResponse(entries=[_history_entry(d) for d in db.list_history(user.uid)])
-
-
-@app.post("/api/history", response_model=HistoryEntry)
-def save_history(entry: HistoryEntryCreate, user: AuthUser = Depends(current_user)):
-    """Called right after a classification completes, so it's saved before
-    the user navigates anywhere else."""
-    _require_db()
-    doc = db.add_history_entry(
-        user.uid, entry.result.model_dump(mode="json"), entry.file_name, entry.thumbnail
-    )
-    return _history_entry(doc)
-
-
-@app.delete("/api/history/{entry_id}")
-def delete_history_entry(entry_id: str, user: AuthUser = Depends(current_user)):
-    _require_db()
-    db.delete_history_entry(user.uid, entry_id)
-    return {"deleted": True}
-
-
-@app.delete("/api/history")
-def clear_history(user: AuthUser = Depends(current_user)):
-    _require_db()
-    db.clear_history(user.uid)
-    return {"deleted": True}

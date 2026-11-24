@@ -1,6 +1,5 @@
 """Request/response shapes. The frontend's src/lib/types.ts mirrors these."""
 
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -157,47 +156,3 @@ class ChatResponse(BaseModel):
     warnings: list[str]
     latency_ms: float
 
-
-# ---------------------------------------------------------------- accounts
-class EmailUpdates(BaseModel):
-    opted_in: bool
-    updated_at: datetime  # when the user made this choice
-
-
-class Profile(BaseModel):
-    uid: str
-    email: str | None
-    email_verified: bool
-    name: str
-    email_updates: EmailUpdates
-    created_at: datetime
-
-
-class ProfileUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=80)
-    email_updates: bool
-
-
-# ---------------------------------------------------------------- history
-class HistoryEntry(BaseModel):
-    """One saved analysis. Stored server-side per signed-in user, so it
-    follows them to any device or browser — this is what replaced the old
-    browser-only localStorage history."""
-
-    id: str
-    result: ClassifyResponse
-    file_name: str
-    thumbnail: str | None
-    saved_at: datetime
-
-
-class HistoryEntryCreate(BaseModel):
-    """What the browser sends right after an analysis completes."""
-
-    result: ClassifyResponse
-    file_name: str = Field(max_length=255)
-    thumbnail: str | None = None
-
-
-class HistoryListResponse(BaseModel):
-    entries: list[HistoryEntry]
