@@ -10,7 +10,7 @@
 
 Upload a space image → get the object type, an honest confidence, and a cited explanation at your reading level.
 
-[**Live demo**](https://adastra-virid.vercel.app) · [Architecture](#architecture) · [Results](#results) · [Run locally](#run-it-locally) · [Limitations](#honest-limitations)
+[**Live demo**](https://astronomical-image-detection-object-omega.vercel.app/dashboard) · [Architecture](#architecture) · [Results](#results) · [Run locally](#run-it-locally) · [Limitations](#honest-limitations)
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
